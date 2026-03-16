@@ -1,11 +1,11 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_file
 import psycopg2
 import os
+import pandas as pd # Importante: adicione pandas
+import io
 
 app = Flask(__name__)
 
-# String de conexão do Neon (Você pegará no painel do Neon.tech)
-# Formato: postgres://usuario:senha@host/neondb
 DATABASE_URL = os.environ.get('DATABASE_URL') 
 
 def get_db_connection():
@@ -16,10 +16,38 @@ def get_db_connection():
 def index():
     return render_template('index.html')
 
+# --- NOVA ROTA PARA O EXCEL ---
+@app.route('/baixar-dados')
+def baixar_dados():
+    try:
+        conn = get_db_connection()
+        # Lê a tabela do banco de dados direto para um DataFrame do Pandas
+        query = "SELECT data, n_nota, fornecedor, material, unidade, quantidade, valor_unitario, valor_total, projeto FROM notas"
+        df = pd.read_sql(query, conn)
+        conn.close()
+
+        # Prepara o arquivo CSV na memória
+        output = io.StringIO()
+        # Usamos sep=';' e decimal=',' para o Excel abrir direto sem precisar configurar nada
+        df.to_csv(output, index=False, sep=';', encoding='utf-8-sig')
+        
+        # Converte para bytes para o Flask enviar
+        mem = io.BytesIO()
+        mem.write(output.getvalue().encode('utf-8-sig'))
+        mem.seek(0)
+
+        return send_file(
+            mem,
+            mimetype='text/csv',
+            as_attachment=True,
+            download_name='dados_sistema.csv'
+        )
+    except Exception as e:
+        return f"Erro ao gerar CSV: {str(e)}"
+
 @app.route('/adicionar', methods=['POST'])
 def adicionar():
     try:
-        # 1. Coleta os dados do formulário
         data_nota = request.form.get('data')
         n_nota = request.form.get('n_nota')
         fornecedor = request.form.get('fornecedor')
@@ -32,7 +60,6 @@ def adicionar():
         if not materiais:
             return jsonify({"status": "error", "message": "Nenhum material informado."})
 
-        # 2. Conecta ao banco e salva
         conn = get_db_connection()
         cur = conn.cursor()
 
@@ -52,7 +79,7 @@ def adicionar():
 
         return jsonify({
             "status": "success", 
-            "message": f"✅ {len(materiais)} itens salvos com sucesso no Banco de Dados!"
+            "message": f"✅ {len(materiais)} itens salvos com sucesso!"
         })
 
     except Exception as e:
