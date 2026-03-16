@@ -1,12 +1,16 @@
 from flask import Flask, render_template, request, jsonify
-import pandas as pd
-from openpyxl import load_workbook
+import psycopg2
 import os
 
 app = Flask(__name__)
 
-# Caminho para a planilha na mesma pasta do script
-EXCEL_PATH = "nota_almoxarifado.xlsx"
+# String de conexão do Neon (Você pegará no painel do Neon.tech)
+# Formato: postgres://usuario:senha@host/neondb
+DATABASE_URL = os.environ.get('DATABASE_URL') 
+
+def get_db_connection():
+    conn = psycopg2.connect(DATABASE_URL)
+    return conn
 
 @app.route('/')
 def index():
@@ -28,51 +32,32 @@ def adicionar():
         if not materiais:
             return jsonify({"status": "error", "message": "Nenhum material informado."})
 
-        # 2. Prepara as linhas para salvar
-        novas_linhas = []
+        # 2. Conecta ao banco e salva
+        conn = get_db_connection()
+        cur = conn.cursor()
+
         for i in range(len(materiais)):
             qtd = float(quantidades[i] or 0)
             v_unit = float(valores_unit[i] or 0)
             v_total = qtd * v_unit
             
-            # Ordem exata das colunas:
-            novas_linhas.append([
-                data_nota, n_nota, fornecedor, materiais[i], 
-                unidades[i], qtd, v_unit, v_total, projetos[i]
-            ])
+            cur.execute("""
+                INSERT INTO notas (data, n_nota, fornecedor, material, unidade, quantidade, valor_unitario, valor_total, projeto)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """, (data_nota, n_nota, fornecedor, materiais[i], unidades[i], qtd, v_unit, v_total, projetos[i]))
 
-        # 3. Lógica de Salvamento na Planilha
-        colunas = ["Data", "N nota", "Fornecedor", "Material", "Unidade", "Quantidade", "Valor unitario", "Valor Total", "Projeto"]
-
-        if not os.path.exists(EXCEL_PATH):
-            # Cria a planilha do zero se não existir
-            df = pd.DataFrame(novas_linhas, columns=colunas)
-            df.to_excel(EXCEL_PATH, sheet_name='dados', index=False)
-        else:
-            # Abre a planilha existente e adiciona na aba 'dados'
-            book = load_workbook(EXCEL_PATH)
-            if 'dados' not in book.sheetnames:
-                book.create_sheet('dados')
-                sheet = book['dados']
-                sheet.append(colunas) # Adiciona cabeçalho se a aba for nova
-            else:
-                sheet = book['dados']
-
-            for linha in novas_linhas:
-                sheet.append(linha)
-            
-            book.save(EXCEL_PATH)
-            book.close()
+        conn.commit()
+        cur.close()
+        conn.close()
 
         return jsonify({
             "status": "success", 
-            "message": f"✅ {len(materiais)} itens salvos com sucesso na planilha!"
+            "message": f"✅ {len(materiais)} itens salvos com sucesso no Banco de Dados!"
         })
 
-    except PermissionError:
-        return jsonify({"status": "error", "message": "⚠️ O Excel está aberto! Feche o arquivo e tente novamente."})
     except Exception as e:
-        return jsonify({"status": "error", "message": f"❌ Erro: {str(e)}"})
+        return jsonify({"status": "error", "message": f"❌ Erro ao salvar: {str(e)}"})
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
