@@ -4,8 +4,10 @@ import requests
 
 app = Flask(__name__)
 
-# URL que você gerou no Google Apps Script
-GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzMhS4JcznxNKOzpjjFmPotsdOYS63DBtXrZrACFLrWyQ7DnOs_lR5BWV1GKGUj63P4gA/exec'
+import os
+
+# URL sheets
+GOOGLE_SCRIPT_URL = os.environ.get('GOOGLE_SCRIPT_URL')
 
 @app.route('/')
 def index():
