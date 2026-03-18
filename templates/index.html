@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema Almoxarifado - Google Sheets Sync</title>
+    <title>Sistema Almoxarifado - Notas Fiscais</title>
     <style>
         /* Configuração do Fundo com Gradiente */
         body {
@@ -171,7 +171,7 @@
     </div>
 
     <div class="form-container">
-        <h2>Entrada de Notas - Google Sheets</h2>
+        <h2>Entrada de Notas</h2>
         
         <div id="status-message"></div>
         
@@ -221,7 +221,7 @@
             <button type="button" class="btn-add" onclick="adicionarMaterial()">+ ADICIONAR OUTRO MATERIAL</button>
             
             <button type="submit" id="btn-cadastrar" class="btn-save">
-                 SALVAR 
+                 SALVAR
             </button>
 
             <a href="https://docs.google.com/spreadsheets/d/1o_K4yeb7Up1f7jtmwryG2PYNynRhILfbzHaJRE2hJg0/edit?gid=0#gid=0" target="_blank" class="btn-sheets">
@@ -301,13 +301,13 @@
         .catch(error => {
             console.error("Erro:", error);
             statusDiv.style.display = 'block';
-            statusDiv.innerText = "Erro ao conectar com o servidor.";
+            statusDiv.innerText = "❌ Erro ao conectar com o servidor.";
             statusDiv.style.backgroundColor = '#f8d7da';
             statusDiv.style.color = '#721c24';
         })
         .finally(() => {
             btn.disabled = false;
-            btn.innerText = "FINALIZAR E SALVAR NA NUVEM";
+            btn.innerText = "🚀 FINALIZAR E SALVAR NA NUVEM";
         });
     });
 </script>
