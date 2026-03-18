@@ -221,11 +221,11 @@
             <button type="button" class="btn-add" onclick="adicionarMaterial()">+ ADICIONAR OUTRO MATERIAL</button>
             
             <button type="submit" id="btn-cadastrar" class="btn-save">
-                🚀 FINALIZAR E SALVAR NA NUVEM
+                 SALVAR 
             </button>
 
             <a href="https://docs.google.com/spreadsheets/d/1o_K4yeb7Up1f7jtmwryG2PYNynRhILfbzHaJRE2hJg0/edit?gid=0#gid=0" target="_blank" class="btn-sheets">
-                🟢 ABRIR PLANILHA EM TEMPO REAL
+                 ABRIR PLANILHA EM TEMPO REAL
             </a>
         </form>
     </div>
@@ -301,13 +301,13 @@
         .catch(error => {
             console.error("Erro:", error);
             statusDiv.style.display = 'block';
-            statusDiv.innerText = "❌ Erro ao conectar com o servidor.";
+            statusDiv.innerText = "Erro ao conectar com o servidor.";
             statusDiv.style.backgroundColor = '#f8d7da';
             statusDiv.style.color = '#721c24';
         })
         .finally(() => {
             btn.disabled = false;
-            btn.innerText = "🚀 FINALIZAR E SALVAR NA NUVEM";
+            btn.innerText = "FINALIZAR E SALVAR NA NUVEM";
         });
     });
 </script>
